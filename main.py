@@ -1,43 +1,56 @@
 import sys
-import string
+from stats import get_num_words, get_char_count, get_sorted_list_of_dicts
+
 
 def main():
-    book_path = "books/frankenstein.txt"
-    file_contents = get_book(book_path)
-    word_count = get_word_count(file_contents)
-    letter_count = get_letter_count(file_contents)
-    print("--- Begin report of books/frankenstein.txt ---")
-    print(f"{word_count} words found in document")
-    count = 0
-    for key, value in letter_count.items():
-        if value > 0 and key.isalpha():
-            count += 1
-            print(f"the '{key}' character was found {value} times\n")
-    
+    # Check if a path to the book was provided as a command-line argument
+    if len(sys.argv) < 2:
+        print("Usage: python3 main.py <path_to_book>")
+        sys.exit(1)
 
-def get_book(book_path):
-    with open(book_path) as f:
-        file_contents = f.read()
-        return file_contents
+    # Get the path to the book from the command-line argument
+    book_path = sys.argv[1]
 
-def get_word_count(file_contents):
-    words = file_contents.split()
-    word_count = len(words)
-    return word_count
+    # Read the contents of the book file
+    file_contents = read_book_text(book_path)
 
-def get_letter_count(file_contents):
-    res_dict = {}
-    file_contents_ci = file_contents.lower()
-    alphabets = list(string.ascii_lowercase)
-    sp_char = list(string.punctuation)
-    all_char = alphabets + sp_char
-    for character1 in all_char:
-        res_dict[character1] = 0
-        for character2 in file_contents_ci:
-            if character1 == character2:
-                res_dict[character1] += 1
-    return res_dict
+    # Get total word count from the book content
+    num_words = get_num_words(file_contents)
+
+    # Get character frequency dictionary from the book content
+    char_count = get_char_count(file_contents)
+
+    # Generate the analysis report header
+    report_lines = [
+        "============ BOOKBOT ============",
+        f"Analyzing book found at {book_path}...",
+        "----------- Word Count ----------",
+        f"Found {num_words} total words",
+        "--------- Character Count -------",
+    ]
+
+    # Sort the character frequency dictionary into a list of dicts and append to the report
+    sorted_chars = get_sorted_list_of_dicts(char_count)
+    for item in sorted_chars:
+        report_lines.append(f"{item['char']}: {item['num']}")
+
+    # Join the report lines and print the final report
+    print("\n".join(report_lines))
 
 
-if __name__ == '__main__':
-    sys.exit(main())  # next section explains the use of sys.exit
+def read_book_text(book_path):
+    """Read and return the contents of the book file at the given path."""
+    try:
+        with open(book_path, "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        print(f"Error: File not found at {book_path}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    # Run the main function and exit with its return code
+    sys.exit(main())
